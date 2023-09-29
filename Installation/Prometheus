@@ -33,7 +33,7 @@ You can install Prometheus in multiple ways as listed below :
       3. ./prometheus  -- It will start the application
       4. Create an service so that your prometheus will run continuously.
            sudo cp -r . /usr/local/bin/prometheus
-           sudo vi etc/systemd/system/prometheus.service     # Add data from official website 
+           sudo vi /etc/systemd/system/prometheus.service     # Add data from official website 
             [Unit]
             Description=Prometheus Service
             After=network.target
