@@ -46,6 +46,9 @@ You can install Prometheus in multiple ways as listed below :
               
           [Install]
           WantedBy=multi-user.target
+
+          sudo service prometheus start
+          sudo service prometheus status
           Now check on browser with http://Public_ip:9090
       
       
