@@ -30,5 +30,22 @@ You can install Prometheus in multiple ways as listed below :
  3. Using official commands listed on Prometheus Documentation (On Linux) :
       1. wget https://github.com/prometheus/prometheus/releases/download/v2.47.0/prometheus-2.47.0.linux-amd64.tar.gz
       2. tar -xvf ........tar.gz
+      3. ./prometheus  -- It will start the application
+      4. Create an service so that your prometheus will run continuously.
+           sudo cp -r . /usr/local/bin/prometheus
+           sudo vi etc/systemd/system/prometheus.service     # Add data from official website 
+            [Unit]
+            Description=Prometheus Service
+            After=network.target
+
+            [Service]
+            User=prometheus
+            Group=prometheus
+            Type=simple
+            ExecStart=/usr/local/bin/prometheus/prometheus --config.file /etc/prometheus/prometheus.yml 
+              
+          [Install]
+          WantedBy=multi-user.target
+          Now check on browser with http://Public_ip:9090
       
       
