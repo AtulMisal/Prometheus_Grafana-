@@ -49,5 +49,58 @@ You can install Prometheus in multiple ways as listed below :
           sudo service prometheus start
           sudo service prometheus status
           Now check on browser with http://Public_ip:9090
+-------------------------------------------------------------------------------------------------------------------------
+
+Now we can install node exporter which acts as agent.
+   wget https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz
+   tar -xvf *.tar.gz
+   cd node*
+   cp -r node_exporter /usr/local/bin/
+   vi /etc/systemd/system/node_exporter.service
+      [Unit]
+      Description=Node_Exporter
+      after=network.target
+
+      [Service]
+      type=simple
+      ExecStart=/usr/local/bin/node_exporter 
+
+      [Install]
+      WantedBy=multi-user.target
+
+   systemctl daemon-relode
+   service node_exporter start
+   service node_exporter status
+   http://localhost:9100
+
+ To check in prometheus we need to add these values in prometheus.yml file under target section.
+    service prometheus restart
+    service prometheus status
+------------------------------------------------------------------------------------------------------------------------------
+
+Now will install alert manager which acts as alerting system
+  wget https://github.com/prometheus/alertmanager/releases/download/v0.26.0/alertmanager-0.26.0.linux-amd64.tar.gz
+  tar -xvf *.tar.gz
+  cp -r . /usr/local/bin/
+  vi /etc/systemd/system/alert_manager.service
+      [Unit]
+      Description=Alert_Manager
+      after=network.target
+
+      [Service]
+      type=simple
+      ExecStart=/usr/local/bin/alert_manager --config.file /usr/local/bin/alert_manager/alert_manager.yml
+
+      [Install]
+      WantedBy=multi-user.target
+
+   systemctl daemon-relode
+   service alert_manager start
+   service alert_manager status
+   http://localhost:9093
+To check in prometheus we need to add these values in prometheus.yml file under alerting section.
+    service prometheus restart
+    service prometheus status
+
       
       
