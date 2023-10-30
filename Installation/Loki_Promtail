@@ -1,173 +1,104 @@
+# Install Grafana on Debian or Ubuntu :
 
-Install Grafana on Debian or Ubuntu
-
-sudo apt-get install -y apt-transport-https
-
-sudo apt-get install -y software-properties-common wget
-
-sudo wget -q -O /usr/share/keyrings/grafana.key https://apt.grafana.com/gpg.key
-
+    1. Install Grafana on Debian or Ubuntu
+    2. sudo apt-get install -y apt-transport-https
+    3. sudo apt-get install -y software-properties-common wget
+    4. sudo wget -q -O /usr/share/keyrings/grafana.key https://apt.grafana.com/gpg.key
 
 Stable release
-
-echo "deb [signed-by=/usr/share/keyrings/grafana.key] https://apt.grafana.com stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+    1. echo "deb [signed-by=/usr/share/keyrings/grafana.key] https://apt.grafana.com stable main" | 
+       sudo tee -a /etc/apt/sources.list.d/grafana.list
 
 Beta release
+    1. echo "deb [signed-by=/usr/share/keyrings/grafana.key] https://apt.grafana.com beta main" | 
+       sudo tee -a /etc/apt/sources.list.d/grafana.list
 
-echo "deb [signed-by=/usr/share/keyrings/grafana.key] https://apt.grafana.com beta main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+Update the list of available packages
+     1. sudo apt-get update
 
-# Update the list of available packages
+Install the latest OSS release:
 
-sudo apt-get update
+      1. sudo apt-get install grafana
 
-
-# Install the latest OSS release:
-
-sudo apt-get install grafana
-
-#To start Grafana Server
-
-sudo /bin/systemctl status grafana-server
+To start Grafana Server
+      1. sudo /bin/systemctl status grafana-server
 
 
+# Install Loki and Promtail using Docker :
 
+1. Download Loki Config
+      wget https://raw.githubusercontent.com/grafana/loki/v2.8.0/cmd/loki/loki-local-config.yaml -O loki-config.yaml
 
-Install Loki and Promtail using Docker
+2. Run Loki Docker container
+      docker run -d --name loki -v $(pwd):/mnt/config -p 3100:3100 grafana/loki:2.8.0 --config.file=/mnt/config/loki-config.yaml
 
-Download Loki Config
+3. Download Promtail Config
+      wget https://raw.githubusercontent.com/grafana/loki/v2.8.0/clients/cmd/promtail/promtail-docker-config.yaml -O 
+      promtail-config.yaml
 
-wget https://raw.githubusercontent.com/grafana/loki/v2.8.0/cmd/loki/loki-local-config.yaml -O loki-config.yaml
+4. Run Promtail Docker container
+      docker run -d --name promtail -v $(pwd):/mnt/config -v /var/log:/var/log --link loki grafana/promtail:2.8.0 
+      --config.file=/mnt/config/promtail-config.yaml
 
+# Install Prometheus and cAdvisor :
+      cAdvisor (short for container Advisor) analyzes and exposes resource usage and performance data from running containers. 
+      cAdvisor exposes Prometheus metrics out of the box.
 
-Run Loki Docker container
+1. Download the prometheus config file
+      Wget https://raw.githubusercontent.com/prometheus/prometheus/main/documentation/examples/prometheus.yml
 
+2. Install Prometheus using Docker
+      docker run -d --name=prometheus -p 9090:9090 -v <PATH_TO_prometheus.yml_FILE>:/etc/prometheus/prometheus.yml prom/prometheus 
+      --config.file=/etc/prometheus/prometheus.yml
 
-docker run -d --name loki -v $(pwd):/mnt/config -p 3100:3100 grafana/loki:2.8.0 --config.file=/mnt/config/loki-config.yaml
-
-
-Download Promtail Config
-
-
-wget https://raw.githubusercontent.com/grafana/loki/v2.8.0/clients/cmd/promtail/promtail-docker-config.yaml -O promtail-config.yaml
-
-
-Run Promtail Docker container
-
-
-docker run -d --name promtail -v $(pwd):/mnt/config -v /var/log:/var/log --link loki grafana/promtail:2.8.0 --config.file=/mnt/config/promtail-config.yaml
-
-
-Install Prometheus and cAdvisor
-
-
-cAdvisor (short for container Advisor) analyzes and exposes resource usage and performance data from running containers. cAdvisor exposes Prometheus metrics out of the box.
-
-
-Download the prometheus config file
-
-Wget https://raw.githubusercontent.com/prometheus/prometheus/main/documentation/examples/prometheus.yml
-
-
-Install Prometheus using Docker
-
-docker run -d --name=prometheus -p 9090:9090 -v <PATH_TO_prometheus.yml_FILE>:/etc/prometheus/prometheus.yml prom/prometheus --config.file=/etc/prometheus/prometheus.yml
-
-
-
-Add cAdvisor target
-
-
+3. Add cAdvisor target
 ```
 scrape_configs:
-
-- job_name: cadvisor
-
-  scrape_interval: 5s
-
-  static_configs:
-
-  - targets:
-
-    - cadvisor:8080
+  - job_name: cadvisor
+    scrape_interval: 5s
+    static_configs:
+      - targets:
+         - cadvisor:8080
 
 
-
-#Using Docker Compose
-
-
+# Using Docker Compose :
 
 version: '3.2'
-
 services:
-
   prometheus:
-
     image: prom/prometheus:latest
-
     container_name: prometheus
-
     ports:
-
     - 9090:9090
-
     command:
-
     - --config.file=/etc/prometheus/prometheus.yml
-
     volumes:
-
     - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-
     depends_on:
-
     - cadvisor
-
   cadvisor:
-
     image: gcr.io/cadvisor/cadvisor:latest
-
     container_name: cadvisor
-
     ports:
-
     - 8080:8080
-
     volumes:
-
     - /:/rootfs:ro
-
     - /var/run:/var/run:rw
-
     - /sys:/sys:ro
-
     - /var/lib/docker/:/var/lib/docker:ro
-
     depends_on:
-
     - redis
-
   redis:
-
     image: redis:latest
-
     container_name: redis
-
     ports:
-
     - 6379:6379
 
-
 #  Verify
+     1. docker-compose up -d
+     2. docker-compose ps
 
-
-docker-compose up -d
-
-docker-compose ps
-
-
-Test PromQL
-
-rate(container_cpu_usage_seconds_total{name="redis"}[1m])
-
-container_memory_usage_bytes{name="redis"}
+# Test PromQL :
+    rate(container_cpu_usage_seconds_total{name="redis"}[1m])
+    container_memory_usage_bytes{name="redis"}
 
