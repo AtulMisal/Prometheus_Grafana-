@@ -28,7 +28,8 @@
 # Install Loki and Promtail using Docker :
      1. apt-get install docker.io
 
-     2. sudo usermod -aG docker $USER
+     2. sudo usermod -aG docker $USER 
+        sudo reboot
 
      3. Download Loki Config
            wget https://raw.githubusercontent.com/grafana/loki/v2.8.0/cmd/loki/loki-local-config.yaml -O loki-config.yaml
