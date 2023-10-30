@@ -31,8 +31,10 @@
      2. sudo usermod -aG docker $USER 
         sudo reboot
 
-     3. Download Loki Config
-           wget https://raw.githubusercontent.com/grafana/loki/v2.8.0/cmd/loki/loki-local-config.yaml -O loki-config.yaml
+     3. Download Loki Config :
+           1. mkdir grafana_conf
+           2. cd gragana_conf
+           3. wget https://raw.githubusercontent.com/grafana/loki/v2.8.0/cmd/loki/loki-local-config.yaml -O loki-config.yaml
 
      4. Run Loki Docker container
            docker run -d --name loki -v $(pwd):/mnt/config -p 3100:3100 grafana/loki:2.8.0 --config.file=/mnt/config/loki-config.yaml
