@@ -1,4 +1,4 @@
-You can install Prometheus in multiple ways as listed below :
+**You can install Prometheus in multiple ways as listed below :**
   1. Using Helm charts
   2. Using Docker containers
   3. Using official commands listed on Prometheus Documentation.
