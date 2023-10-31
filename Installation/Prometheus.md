@@ -15,16 +15,26 @@
            kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-ext
 
  # 2. Using Docker containers :
-         docker run -d -p 9090:9090 -v ~/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus -config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus -storage.local.memory-chunks=10000
+      If you have your own prometheus.yml file then use this command
+         docker run -d -p 9090:9090 -v ~/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus - 
+         config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus -storage.local.memory-chunks=10000
          This command is quite long and contains many command line options. Let’s take a look at it in more detail:
-       1. The -d option starts the Prometheus container in detached mode, meaning that the container will be started in the background and will not be terminated by pressing CTRL+C.
-       2. The -p 9090:9090 option exposes Prometheus’s web port (9090) and makes it reachable via the external IP address of the host system.
-       3. The -v [...] option mounts the prometheus.yml configuration file from the host filesystem into the location within the container where Prometheus expects it (/etc/prometheus/prometheus.yml).
+       1. The -d option starts the P rometheus container in detached mode, meaning that the container will be started in the background 
+          and will not be terminated by pressing CTRL+C.
+       2. The -p 9090:9090 option exposes Prometheus’s web port (9090) and makes it reachable via the external IP address of the host 
+          system.
+       3. The -v [...] option mounts the prometheus.yml configuration file from the host filesystem into the location within the 
+          container where Prometheus expects it (/etc/prometheus/prometheus.yml).
        4. The -config.file option is set accordingly to the location of the Prometheus configuration file within in the container.
        5. The -storage.local.path option configures the metrics storage location within the container.
-       6. Finally, the -storage.local.memory-chunks option adjusts Prometheus’s memory usage to the host system’s very small amount of RAM (only 512MB) and small number of stored time series in this tutorial (just under 1000). 
-         It instructs Prometheus to keep only 10000 sample chunks in memory (roughly 10 chunks per series), instead of the default of 1048576. This is a value you will definitely need to tune when running Prometheus on a machine 
+       6. Finally, the -storage.local.memory-chunks option adjusts Prometheus’s memory usage to the host system’s very small amount of 
+          RAM (only 512MB) and small number of stored time series in this tutorial (just under 1000). 
+         It instructs Prometheus to keep only 10000 sample chunks in memory (roughly 10 chunks per series), instead of the default of 
+         1048576. This is a value you will definitely need to tune when running Prometheus on a machine 
          with more RAM and when storing more time series. Refer to Prometheus’s storage documentation for more details around this.
+
+   If you want to do everything from scratch use 
+     docker container run -itd --name prometheus -p 9090:9090 prom/prometheus
 
  # 3. Using official commands listed on Prometheus Documentation (On Linux) :
         1. wget https://github.com/prometheus/prometheus/releases/download/v2.47.0/prometheus-2.47.0.linux-amd64.tar.gz
