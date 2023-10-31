@@ -16,8 +16,7 @@
 
  # 2. Using Docker containers :
          docker run -d -p 9090:9090 -v ~/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus -config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus -storage.local.memory-chunks=10000
-
-    This command is quite long and contains many command line options. Let’s take a look at it in more detail:
+         This command is quite long and contains many command line options. Let’s take a look at it in more detail:
        1. The -d option starts the Prometheus container in detached mode, meaning that the container will be started in the background and will not be terminated by pressing CTRL+C.
        2. The -p 9090:9090 option exposes Prometheus’s web port (9090) and makes it reachable via the external IP address of the host system.
        3. The -v [...] option mounts the prometheus.yml configuration file from the host filesystem into the location within the container where Prometheus expects it (/etc/prometheus/prometheus.yml).
@@ -119,15 +118,14 @@
                    summary: "Instance [{{ $labels.instance }}] down"
                    description: "[{{ $labels.instance }}] of job [{{ $labels.job }}] has been down for more than 1 minute."
 	   
-	       7. Save it and test it with the promtool
-             ./promtool check rules prometheus_rules.yml   
+        7. Save it and test it with the promtool
+                ./promtool check rules prometheus_rules.yml   
 		
 	 
         8. To check in prometheus we need to add these values in prometheus.yml file under alerting section as.
               
         9. Restart the follo servers:
               service prometheus restart
-              service prometheus status
+               service prometheus status
 
-      
       
