@@ -1,0 +1,403 @@
+Started on 26/09/2023    
+
+ 1. Loki, Promtail & Grafana  -- https://www.youtube.com/watch?v=QwGm5m4AxNA
+ 2. Prometheus & Grafana      -- https://www.youtube.com/watch?v=EeiYpnBHnhY
+ 3. Prometheus                -- https://www.youtube.com/watch?v=7gW5pSM6dlU Deekshit SN
+ 4. Grafana                   -- https://www.youtube.com/watch?v=CMvOekuOvSo Vikas Jha
+
+Alertmanager:
+  rules (prometheus_rules.yml) samples:
+      https://samber.github.io/awesome-prometheus-alerts/rules.html
+
+	  
+    Prometheus Port : 9090   Grafana Port    : 3000   Alertmanager    : 9093
+    Node Exporter   : 9100   Loki            : 3100   Promtail        : 9080	  
+ 
+------------------------------------------------------------------------------------------------------------------------------
+
+Prometheus Final 15-3-2024
+
+1. Introduction :
+    1. In order to monitor the fast & growing microservices trend in IT Industry Prometheus is a tool that provides metrics and 
+	   alerting through monitoring solution.
+	2. Prometheus is pull based tool. 
+    3. As a DevOps engineer we deploy our app on server but along with this we have to monitor , collect the logs and 
+       sending alerts when needed.
+	4. But in case of logging Prometheus is not a best tool it is used when we have time series data/metrics but to collect 
+	   loges we are using Loki. It works as datasource to Grafana.
+    5. To collect logs from diff server we use Promtail and it provide to Loki.	Loki is an log aggregation tool.
+	6. Loki and Prometheus are both open source tools. While Loki is a log aggregation tool, Prometheus is a metrics monitoring tool.
+       Loki's design is inspired by Prometheus but for logs.
+         Grafana <-- Loki <-- Promtail 
+
+
+2. Features :
+    1. Its highly scalable and available.
+    2. It has minimal external dependencies.
+    3. Deployment is easy.  
+	4. A multi-dimensional data model
+
+
+3. Prometheus Components:
+    1. Prometheus server: 
+	    This is the main component which scrapes and stores time series data (Stores data with timestamp. The time 
+		series data can be accessed via http server.
+
+    2. Client libraries: 
+	    Before we can monitor our services, we need to add instrumentation to the application 
+	    code using one of the Prometheus client libraries. 
+
+    3. Push Gateway: 
+	    For short-lived jobs like small scripts which executes within seconds we can use push gateway to get metrics.
+
+    4. Exporters: 
+	    Exporters are used to generate metrics in Prometheus format. 
+
+    5. Alert Manager: 
+	    In order to handle alerts. 
+	
+	Metric:
+      Metric is a value of a quantity at a given point of time. 
+	
+	  
+	Basic Metric Types:
+      Counter: 
+        It is a metric whose value increases during the lifetime of a process/system.
+		Also records the values that only goes up.
+        For example, you can represent the number of logs generated, requests served, processes completed, or errors.
+   
+      Gauge: 
+        It is metric whose value can go up or down.
+        For example, you can represent the current CPU usage, memory usage or temperature.
+   
+      Histogram: 
+        It is metric that samples observations and then counts them in configurable buckets. It also provides 
+        a sum of all observed values. It helps to measure data like "how long something took?" or "how big a particular 
+        request was?".
+        For example, request durations, or number of children's in different age groups.
+
+      Summaries:
+	    Takes many measurments of value to later calculate the avg.
+	
+	
+	PromQL:
+      It is Prometheus’s own query language that used for retrieving data from the Prometheus server.
+	  
+	
+4. Installing Prometheus :  
+    1. Download the Prometheus binary from Prometheus.io site and extract the Prometheus tar file.
+	     wget https://github.com/prometheus/prometheus/releases/download/v2.45.3/prometheus-2.45.3.linux-amd64.tar.gz
+		 
+	2. Move into the extracted Prometheus tar file and edit prometheus.yml file as shown:
+	    1. tar -xvf prometheus-2.45.3.linux-amd64.tar.gz
+		2. mv prometheus-2.45.3.linux-amd64 prometheus
+		3. cd prometheus
+	
+	3. Execute the below command to start Prometheus.
+         ./prometheus
+    
+	4. Let the previous command be running, open a browser in a machine connected to Prometheus server. 
+	     Provide the link http://<Servers IP>:9090 in web-browser. We can access Prometheus dashboard.		   
+    
+	5. Lets view the graph and console in Prometheus dashboard for following metric 
+         "prometheus_http_request_duration_seconds_count".	
+	 
+    6. Here if we come out of the current shell then the prometheus will stop so to avoid this we need to create a service.
+
+    7. Move this prometheus directory that we extracted as
+    	 mv prometheus /usr/local/bin/	
+		 
+	8. Create an service as
+         vi /etc/systemd/system/prometheus.service
+   
+    9. Add the below data in the file created in above step 8.
+        [Unit]
+          Description=Prometheus Service
+          After=network.target
+
+        [Service]
+          Type=simple
+          ExecStart=/usr/local/bin/prometheus/prometheus --config.file=/usr/local/bin/prometheus/prometheus.yml 
+             
+	    [Install]
+          WantedBy=multi-user.target	  	
+
+   10. Start the prometheus service as
+          systemctl daemon-reload
+          service prometheus start
+          service prometheus status		  
+
+5. Installing Node Exporter :
+    1. Download the Node Exporter binary from Prometheus.io site on the node machines to be monitored and extract the Node 
+	   Exporter tar file.
+         wget https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+		  
+	2. Move inside the Node Exporter files and Start node exporter. Expose 8080 port in the nodes.
+	     tar -xvf https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+		 mv node_exporter-1.7.0.linux-amd64 node_exporter
+		 cd node_exporter
+		 ./node_exporter
+
+    3. Here also we need to create the service file so move this node_exporter directory to bin folder as
+	     mv node_exporter /usr/local/bin/
+		 
+	4. Create and service file as 
+         vi /etc/systemd/system/node_exporter.service
+
+    5. Add this data in above file 
+        [Unit]
+          Description=node_exporter Service
+          After=network.target
+
+        [Service]
+          Type=simple
+          ExecStart=/usr/local/bin/node_exporter/node_exporter  
+             
+	    [Install]
+          WantedBy=multi-user.target	
+   
+    6. Start the node_exporter service as
+	     systemctl daemon-reload
+         service node_exporter start
+         service node_exporter status		  
+
+    7. Now add this node_exporter to prometheus by adding some data under scrap_configs in prometheus.yml file as 
+	     - job_name: 'node_exporter'
+		   static_configs:
+		    - targets: ['localhost:9100']  # Address of node_exporter\
+	
+    8. Any changes made in prometheus.yml file then we need to restart the prometheus service as 
+         service prometheus restart
+         service prometheus status		 
+		
+
+6. Creating some rules in prometheus :
+    1. Prometheus has many inbuild rules but if we want to use our own rule then we need to create it 
+       by creating a yml file in prometheus directory.
+	   Rules are nothing but prometheus query arrenged in one yml file.
+	   
+    2. Whenerver you install any package you need to move this to /usr/local/bin/ directory as it is binary directory
+       where we can store binary package.
+    
+	3. Create an file with any name as my_rule.yml in /usr/local/bin/prometheus directory.
+       Add the data in below format :
+        groups:
+          - name: custome_rules
+            rules:  
+              - record: my_own_custom_record
+                expr: 100 - (100 * node_memory_MemFree_bytes / node_memory_MemTotal_bytes) # Take any query here.
+
+    4. Now we need to check the syntax if there is any error or not. For that we have promtool in prometheus.
+        ./promtool check rules my_rule.yml
+	
+	5. Then we need to add this rule in prometheus.yml file under rules section as 
+ 	   rules_files:
+	     - "my_rule.yml"
+	
+	6. As we made the changes in prometheus.yml file we need to reload the daemon.
+        systemctl daemon-reload
+        service prometheus restart
+        service prometheus status		
+	
+    7. Alerting rules are created in Prometheus very similar to how you create recording rules. We can use the same prometheus_rules.
+	   yml. 
+       We will create a new file named prometheus_rules.yml.And add the script below.
+       For this we need to install alertmanager as given in step 7
+	groups:
+    - name: alert_rules
+      rules:
+        - alert: InstanceDown
+          expr: up == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Instance [{{ $labels.instance }}] down"
+            description: "[{{ $labels.instance }}] of job [{{ $labels.job }}] has been down for more than 1 minute."
+	   
+	Save it and test it with the promtool
+        ./promtool check rules prometheus_rules.yml   
+		
+	     sudo service prometheus restart
+         sudo service prometheus status	
+	
+	
+7. Installing Alertmanager :
+    1. Install Alertmanager. Create an service for this.
+	2. Add data in alertmanager.yml file as given in Edureka youtube channel.
+	3. Then with help of amtool will check the syntax
+	    amtool check-config alertmanager.yml 
+	4. Need to restart the alertmanager service as 
+        systemctl daemon-reload
+        service alertmanager restart
+        service alertmanager status
+    5. Now add this in prometheus.yml file under alerting and restart the services.		
+
+    Steps :
+	 Steps to install Alert Manager :
+	   1. Download the tar file 
+	         wget https://github.com/prometheus/alertmanager/releases/download/v0.19.0/alertmanager-0.19.0.linux-amd64.tar.gz
+	   2. Untar the file 
+             tar xvfz alertmanager-0.19.0.linux-amd64.tar.gz
+       3. Copy these files to  /usr/local/bin/alertmanager as bin/ directory is used to store binary files.	
+             cp -r . /usr/local/bin/alertmanager	   
+	   4. Create a file called alertmanager.service
+             sudo vi/etc/systemd/system/alertmanager.service
+       5. Add the below content in it 
+             [Unit]
+              Description=Prometheus Alert Manager Service
+              After=network.target
+
+             [Service]
+              Type=simple
+              ExecStart=/usr/local/bin/alertmanager/alertmanager \
+              --config.file=/usr/local/bin/alertmanager/alertmanager.yml 
+             [Install]
+              WantedBy=multi-user.target	   
+	   6. To check weather the config file has correct syntax or not use follow command
+             ./amtool check-config alertmanager.yml
+       7. Add these alertmanager to prometheus.yml file.
+             	   
+	   8. Run below commands
+             1. sudo service alertmanager start
+             2. sudo service alertmanager status
+       9. Edit alertmanager.yml file and put below content as per your reqirnment
+	         route:
+               group_by: [Alertname]
+               group_interval: 30s
+               repeat_interval: 30s
+               # Send all notifications to me.
+               receiver: email-me
+             receivers:
+               - name: email-me
+                 email_configs:
+                   - send_resolved: true
+                     to: mail_id@gmail.com
+                     from: mail_id@gmail.com
+                     smarthost: smtp.gmail.com:587
+                     auth_username: "mail_id@gmail.com"
+                     auth_identity: "mail_id@gmail.com"
+                     auth_password: "****"               # Gmail Pass
+					 
+		Check your configuration with the supplied amtool
+              /usr/local/bin/alertmanager/amtool check-config /usr/local/bin/alertmanager/alertmanager.yml	
+              sudo service alertmanager restart
+              sudo service alertmanager status	
+
+            alerting:
+              alertmanagers:
+                - static_configs:
+                  - targets:
+                    # alertmanager:9093
+                      - localhost:9093
+			  
+		Check the prometheus configuration with the supplied promtool.
+            /usr/local/bin/prometheus/promtool check config /usr/local/bin/prometheus/prometheus.yml
+            sudo service prometheus restart
+            sudo service prometheus status	
+			
+     Also you can create alerts under same prometheus_rule.yml file # Edureka video (47.45 time)
+
+     Also add alertmanager by using tar files and under alertmanager.yml file add the email data for alert.	
+        ./amtool check-config alertmanager.yml
+
+
+8. Grafana :
+     In grafana when you add prometheus as datasource you need to create some dashboard to visualize the data but garafana has 
+	 created some dashboard for you in grafana.com website go there and copy the url and paste in Dashboard option in grafana --> 
+	 Import --> Add that no/url (3662 Abhishek used this)
+   
+   Steps To Install Grafana :
+    1. sudo apt-get install -y apt-transport-https software-properties-common wget
+	2. sudo mkdir -p /etc/apt/keyrings/
+    3. wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+	4. echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+	5. echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com beta main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+	6. sudo apt-get update
+	7. sudo apt-get install grafana
+	8. systemctl start grafana-server
+    9. systemctl status grafana-server
+	   
+	   
+Questions -
+
+    1. What is Monitoring & Why Monitoring at all ?
+         To keep a close eye on the performance of each component in your application.
+	     Like whenever there is any error in your application you need to check each and evry config file to find the 
+		 error and it is a tedius task(time consuming) 
+
+    2. What is Prometheus ?
+        Prometheus is an software application used for event monitoring and alerting. Metrics stored in time series database (TSDB)
+	
+    3. What is Metrics ?
+         Metric is a value of a quantity at a given point of time.
+	
+    4. What is Key-Value Data Model ?
+       1. Prometheus basically works with key value pairs
+       2. The key is for describing what we are measuring, and the value stores the actual measurement data, as a number
+	   3. Prometheus is not meant for storing raw information like plain text 
+	   4. Here the key is called a metric. It could be for example, a memory usage or a CPU usage  
+	   5. We can use Labels to provide more details about our metrics by appending additional fields to those keys
+	   6. Labels help us to filter metrics based on label names and retrieve the exact details that we are looking for.
+	 
+	 
+    5. What are Exporters?
+         A Prometheus Exporter fetches statistics from an application in a format that is used by that system and 
+	     it converts those statistics into metrics that can be understood by Prometheus. Then exporter exposes them 
+	     on a URL from where Prometheus scrapes. There is vast library of applications which exports metrics from third 
+	     parties and then transform them into a Prometheus metrics.
+	  
+    6. What is Node Exporter?
+         To monitor system level application insights in Kubernetes cluster, we commonly use Prometheus, Node Exporters, 
+	     and Grafana together. These tools specifically provide node and container statistics, which helps the developers 
+	     to analyze real-time metrics of containers as well as nodes.
+		 Whenever you use any node exporter you must have to add its entry in prometheus.yml file under scrap_config. Create new job for this in this file.
+		 
+
+     The Node Exporter provides hardware as well as OS level system metrics. Node Exporter measures metrics such as:
+        Disk: Disk Space, IOPS, Mounts
+        Memory: RAM total, RAM Free, RAM Used, RAM Cache
+        CPU: CPU Load, CPU Memory Disk
+        Network: Network traffic, TCP flow, Connections 	  
+	   
+ 6. What is Loki ?
+
+ 7. What is Promtail ?
+
+ 8. What are the 4 metrics of Prometheus?
+       There are four primary Prometheus metric types to query for via PromQL: counters, gauges, histograms, and summaries.
+ 
+ 9. Prometheus Operator :
+  
+ 10. Install Prometheus & Grafana using Docker ?  
+ 
+ 11. Diff types of Monitoring -
+        Server Monitoring
+        Cost Monitoring
+        Network Monitoring
+        App Monitoring
+        Infrastructure Monitoring
+ 
+ 12. ELK Stack?
+       An centrelized application used to store logs as once the system gets logou/reboot the logs may vanish so 
+	   to stoore that logs we used this.
+	   
+ 13. How to fetch docker matrics?
+       For this we eed to create a vi /etc/docker/daemon.json file and add the specific data from which/where you have to fetch data.
+       {
+	      "metrics-addr" : "0.0.0.0:9323",             // On official doc instead of 0.0.0.0 127.0.0.1 used. 
+		  "experimental" : true
+	   }	   
+	   Port you can take any value.
+	   Then restart the docker server and check on 0.0.0.0:9323 metrics will be there.
+ 
+ 
+Loki & Grafana :
+    It is simmiler to Prometheus which is open source but here this tool is used to moniter the logs(Log Aggregation tool).
+	It works as datastore and provides the data to Grafana so that we can see it on dashboard.
+	
+	To collect the logs from application we use Promtail and the provide to Grafana.
+	   Grafana <-- Loki <-- Promtail
+	We use Promtail to collect logs from server/app.
+	   
+	   
